@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharm-Doctordle Archives 📚</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col items-center p-4">
+
+    <header class="text-center my-10">
+        <a href="index.html" class="text-blue-600 text-xs font-bold uppercase tracking-widest hover:underline">← Back to Today's Case</a>
+        <h1 class="text-4xl font-black text-slate-900 tracking-tighter mt-2 uppercase">Clinical Archives</h1>
+        <p id="archive-date" class="text-slate-500 font-mono mt-1 text-sm tracking-widest">Loading History...</p>
+    </header>
+
+    <main class="max-w-md w-full bg-white rounded-[2rem] shadow-2xl p-8 border border-white/20 relative">
+        
+        <div class="absolute top-1/2 -left-4 -translate-y-1/2 flex justify-between w-[calc(100%+2rem)] pointer-events-none">
+            <button id="prev-btn" title="Previous Case" class="pointer-events-auto bg-white border border-slate-200 shadow-lg p-3 rounded-full hover:bg-slate-50 active:scale-90 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            </button>
+            <button id="next-btn" title="Next Case" class="pointer-events-auto bg-white border border-slate-200 shadow-lg p-3 rounded-full hover:bg-slate-50 active:scale-90 transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </button>
+        </div>
+
+        <div id="case-display" class="space-y-6">
+            <div>
+                <span class="text-blue-600 text-[10px] font-black uppercase tracking-widest mb-1 block">Patient Profile</span>
+                <p id="patient-profile" class="text-2xl font-bold text-slate-800 leading-tight">Fetching Archive...</p>
+            </div>
+            
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <span class="text-rose-500 text-[10px] font-black uppercase tracking-widest mb-1 block">Presentation</span>
+                <p id="presentation" class="text-slate-600 italic leading-relaxed text-sm"></p>
+            </div>
+
+            <div id="labs-section" class="hidden p-5 bg-slate-900 rounded-2xl shadow-2xl reveal-hint">
+                <span class="text-cyan-400 text-[10px] font-black uppercase tracking-widest block mb-2">Laboratory Data</span>
+                <p id="labs" class="font-mono text-cyan-50 text-lg tracking-tighter"></p>
+            </div>
+
+            <div id="mechanism-section" class="hidden p-5 bg-amber-50 border border-amber-100 rounded-2xl reveal-hint">
+                <span class="text-amber-600 text-[10px] font-black uppercase tracking-widest block mb-1">Mechanism (Hint 2)</span>
+                <p id="mechanism-hint" class="text-amber-900 font-medium text-sm leading-relaxed"></p>
+            </div>
+
+            <div id="pearl-section" class="hidden p-5 bg-indigo-50 border border-indigo-100 rounded-2xl reveal-hint">
+                <span class="text-indigo-600 text-[10px] font-black uppercase tracking-widest block mb-1">Clinical Pearl (Hint 3)</span>
+                <p id="pearl-hint" class="text-indigo-900 font-medium text-sm leading-relaxed"></p>
+            </div>
+        </div>
+
+        <div id="guess-container" class="mt-8 space-y-4">
+            <input type="text" id="user-guess" placeholder="REPLAY THIS CASE" 
+                   class="w-full p-5 bg-slate-100 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-500 outline-none uppercase font-black text-center text-xl tracking-tighter transition-all">
+            <button id="submit-btn" class="w-full bg-slate-900 text-white font-black py-5 rounded-2xl transition-all shadow-lg active:scale-95 uppercase tracking-widest text-sm">
+                Check Diagnosis
+            </button>
+        </div>
+
+        <div id="results-section" class="hidden mt-6 p-6 bg-emerald-50 rounded-2xl text-center border-2 border-emerald-200">
+            <div class="text-emerald-600 text-2xl mb-1">🎯</div>
+            <h2 class="text-emerald-900 font-black text-sm uppercase tracking-widest">Diagnosis Confirmed</h2>
+        </div>
+    </main>
+
+    <footer class="mt-12 text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em]">
+        &copy; 2026 Dr. Samuel Amoako • Clinical History
+    </footer>
+
+    <script type="module" src="archive-logic.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+[
+  {
+    "id": "2026-04-03",
+    "case_id": 1,
+    "patient_profile": "62yo Female",
+    "presentation": "Sudden onset of painful, red, swollen big toe after a seafood dinner.",
+    "labs_diagnostics": "Urate: 550 μmol/L",
+    "correct_drug": "Colchicine",
+    "clean_drug": "colchicine",
+    "letter_count": 10,
+    "hint_mechanism": "Inhibits microtubule polymerization.",
+    "hint_clinical_pearl": "Avoid in severe renal impairment.",
+    "explanation": "Consistent with acute gout triggered by a purine-rich meal. "
+  },
+  {
+    "id": "2026-04-04",
+    "case_id": 2,
+    "patient_profile": "28yo Male",
+    "presentation": "Dry, non-productive cough, wheezing at night, uses Salbutamol 4x daily. [cite: 2]",
+    "labs_diagnostics": "FEV1/FVC < 0.70",
+    "correct_drug": "Beclometasone",
+    "clean_drug": "beclometasone",
+    "letter_count": 13,
+    "hint_mechanism": "Inhaled Corticosteroid (ICS). [cite: 2]",
+    "hint_clinical_pearl": "Rinse mouth after use to avoid thrush. [cite: 2]",
+    "explanation": "Standard maintenance therapy for asthma. [cite: 2]"
+  }
+]

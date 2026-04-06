@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pharm-Doctordle 💊</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="index.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col items-center p-4">
+
+    <div id="name-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity duration-500 hidden">
+        <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center border border-white/20">
+            <div class="text-4xl mb-4">🩺</div>
+            <h2 class="text-2xl font-black text-slate-900 tracking-tighter uppercase">Clinical Check-in</h2>
+            <p class="text-slate-500 text-sm mt-2 mb-8 font-medium">Please enter your name or initials to begin today's rotation.</p>
+            
+            <input type="text" id="player-name-input" placeholder="e.g. SAMUEL" 
+                   class="w-full p-4 bg-slate-100 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-500 outline-none text-center font-bold uppercase tracking-widest transition-all mb-4">
+            
+            <button id="start-game-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-200 transition-all active:scale-95 uppercase tracking-widest text-sm">
+                Begin Case
+            </button>
+        </div>
+    </div>
+
+    <header class="text-center my-10">
+        <div class="inline-block bg-blue-600 text-white text-[10px] font-black px-2 py-1 rounded-md mb-3 tracking-tighter uppercase">Clinical Simulator v1.0</div>
+        <h1 class="text-5xl font-black text-slate-900 tracking-tighter italic">
+            PHARM<span class="text-blue-600">DOCTORDLE</span>
+        </h1>
+        
+        <p id="user-greeting" class="text-blue-600 font-bold mt-2 hidden animate-pulse">
+            Hello, Dr.(Pharm) <span id="display-name" class="underline decoration-2 underline-offset-4"></span>
+        </p>
+
+        <div class="flex justify-center items-center gap-2 mt-4">
+            <span id="attempts-left" class="text-[10px] font-black px-3 py-1 bg-white border border-slate-200 text-slate-500 rounded-full shadow-sm uppercase tracking-widest">
+                5 Tries Remaining
+            </span>
+        </div>
+    </header>
+
+    <main class="max-w-md w-full bg-white rounded-[2rem] shadow-2xl p-8 border border-white/20 overflow-hidden relative">
+        
+        <div id="case-display" class="space-y-6">
+            <div class="relative">
+                <span class="text-blue-600 text-[10px] font-black uppercase tracking-widest mb-1 block">Patient Profile</span>
+                <p id="patient-profile" class="text-2xl font-bold text-slate-800 leading-tight">
+                    Synchronizing database...
+                </p>
+            </div>
+            
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <span class="text-rose-500 text-[10px] font-black uppercase tracking-widest mb-1 block">Clinical Presentation</span>
+                <p id="presentation" class="text-slate-600 italic leading-relaxed text-sm"></p>
+            </div>
+
+            <div id="labs-section" class="hidden p-5 bg-slate-900 rounded-2xl shadow-2xl reveal-hint">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="flex items-center gap-2 text-cyan-400 text-[10px] font-black uppercase tracking-widest">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
+                        </span>
+                        Telemetry / Lab Results
+                    </span>
+                    <span class="text-slate-500 text-[8px] font-mono tracking-tighter">STAT REQUEST</span>
+                </div>
+                <p id="labs" class="mono text-cyan-50 text-lg tracking-tighter leading-snug"></p>
+            </div>
+
+            <div id="mechanism-section" class="hidden p-5 bg-amber-50 border border-amber-100 rounded-2xl reveal-hint">
+                <span class="text-amber-600 text-[10px] font-black uppercase tracking-widest mb-1 block underline decoration-2 underline-offset-4">Pharmacology Hint (MOA)</span>
+                <p id="mechanism-hint" class="text-amber-900 font-medium text-sm leading-relaxed"></p>
+            </div>
+
+            <div id="pearl-section" class="hidden p-5 bg-indigo-50 border border-indigo-100 rounded-2xl reveal-hint">
+                <span class="text-indigo-600 text-[10px] font-black uppercase tracking-widest mb-1 block underline decoration-2 underline-offset-4">Expert Clinical Pearl</span>
+                <p id="pearl-hint" class="text-indigo-900 font-medium text-sm leading-relaxed"></p>
+            </div>
+        </div>
+
+        <div id="guess-container" class="mt-8 space-y-4">
+            <div class="relative">
+                <input type="text" id="user-guess" placeholder="ENTER DRUG NAME" 
+                       class="w-full p-5 bg-slate-100 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none uppercase font-black text-center text-xl tracking-tighter transition-all placeholder:text-slate-400">
+            </div>
+            
+            <button id="submit-btn" class="w-full bg-slate-900 hover:bg-blue-600 text-white font-black py-5 rounded-2xl transition-all shadow-lg active:scale-[0.98] uppercase tracking-widest text-sm">
+                Confirm Diagnosis
+            </button>
+        </div>
+
+        <div id="results-section" class="hidden mt-8 p-6 bg-emerald-50 border-2 border-emerald-200 rounded-[2rem] text-center">
+            <div class="text-emerald-600 text-3xl mb-2">🎯</div>
+            <h2 class="text-emerald-900 font-black text-xl uppercase tracking-tighter mb-2">Diagnosis Confirmed</h2>
+            
+            <div class="flex justify-around my-4 bg-white/50 py-3 rounded-2xl border border-emerald-100">
+                <div>
+                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Your Score</p>
+                    <p id="final-score-display" class="text-2xl font-black text-emerald-600">--</p>
+                </div>
+                <div>
+                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Today's Rank</p>
+                    <p id="rank-display" class="text-2xl font-black text-blue-600">--</p>
+                </div>
+            </div>
+
+            <p id="final-explanation" class="text-xs text-emerald-800 leading-relaxed font-medium mb-6"></p>
+            
+            <a href="leaderboard.html" class="inline-block w-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black py-3 rounded-xl uppercase tracking-widest transition-all shadow-md shadow-emerald-200">
+                View Global Rankings 🏆
+            </a>
+        </div>
+
+        <div id="game-over-section" class="hidden mt-8 p-6 bg-rose-50 border-2 border-rose-200 rounded-[2rem] text-center">
+            <div class="text-rose-600 text-3xl mb-2">⚠️</div>
+            <h2 class="text-rose-900 font-black text-xl uppercase tracking-tighter mb-1">Clinical Failure</h2>
+            <p class="text-[10px] text-rose-700 uppercase font-bold tracking-widest mb-4">Correct Prescription Required:</p>
+            <span id="correct-answer-reveal" class="inline-block px-6 py-2 bg-rose-600 text-white font-black rounded-full text-xl tracking-tighter uppercase shadow-lg shadow-rose-200 mb-4"></span>
+            
+            <p id="game-over-explanation" class="text-[11px] text-rose-800 italic leading-relaxed mb-6 opacity-80"></p>
+
+            <a href="leaderboard.html" class="inline-block w-full bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black py-3 rounded-xl uppercase tracking-widest transition-all">
+                Check Leaderboard
+            </a>
+        </div>
+
+    </main>
+
+    <footer class="mt-12 text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] flex flex-col items-center gap-4">
+        <a href="archives.html" class="text-blue-500 hover:underline">📚 View Clinical Archives</a>
+        <span>&copy; 2026 Dr. Samuel Amoako • PhD Research Project</span>
+    </footer>
+
+    <script type="module" src="app.js"></script>
+</body>
+</html>

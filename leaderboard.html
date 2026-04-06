@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clinical Rankings 🏆</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col items-center p-4">
+
+    <header class="text-center my-10">
+        <a href="index.html" class="text-blue-600 text-xs font-bold uppercase tracking-widest hover:underline">← Back to Today's Case</a>
+        <h1 class="text-4xl font-black text-slate-900 tracking-tighter mt-2 uppercase">Pharmacy Leaderboard</h1>
+        <p class="text-slate-500 font-medium mt-1 text-sm">Top performing Pharmacists this month</p>
+    </header>
+
+    <main class="max-w-md w-full bg-white rounded-[2.5rem] shadow-2xl p-8 border border-white/20 relative">
+        <div id="leaderboard-list" class="space-y-4">
+            <p class="text-center text-slate-400 font-bold animate-pulse uppercase tracking-widest text-xs">Accessing Records...</p>
+        </div>
+    </main>
+
+    <script type="module" src="leaderboard.js"></script>
+</body>
+</html>
