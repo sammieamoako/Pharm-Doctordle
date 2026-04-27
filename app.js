@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, limit } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyCV8dnsXLS-T0BUEWdPTo7rf_IxnRonI0M",
@@ -18,38 +18,72 @@ let answerKey = "";
 let currentTry = 0;
 const MAX_TRIES = 5;
 let playerName = localStorage.getItem('pharm_doctordle_user');
-let userIP = "";
+let playerEmail = localStorage.getItem('pharm_doctordle_email');
 const todayStr = new Date().toISOString().split('T')[0];
 
-// --- 1. IDENTITY & RANKING LOGIC ---
+// --- 1. IDENTITY & AUTHENTICATION LOGIC ---
 
-async function getIP() {
-    try {
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        userIP = data.ip;
-    } catch (e) { console.log("IP fetch failed"); }
+async function checkAccess() {
+    const nameModal = document.getElementById('name-modal');
+    if (!playerName || !playerEmail) {
+        nameModal.classList.remove('hidden');
+        nameModal.classList.add('flex');
+    } else {
+        nameModal.classList.add('hidden');
+        updateGreeting();
+        await checkPreviousPlay();
+    }
 }
 
-async function calculateRank(userScore) {
-    try {
-        const q = query(collection(db, "leaderboard"), where("date", "==", todayStr));
-        const querySnapshot = await getDocs(q);
-        const scores = [];
-        
-        querySnapshot.forEach((doc) => {
-            scores.push(doc.data().score);
-        });
+async function handleAuthentication() {
+    const nameInput = document.getElementById('player-name-input').value.trim().toUpperCase();
+    const emailInput = document.getElementById('player-email-input').value.trim().toLowerCase();
+    const startBtn = document.getElementById('start-game-btn');
 
-        // Sort scores descending
-        scores.sort((a, b) => b - a);
+    if (nameInput.length < 2 || !emailInput.includes('@')) {
+        alert("Please enter a valid name and institutional email.");
+        return;
+    }
+
+    startBtn.disabled = true;
+    startBtn.textContent = "Authenticating...";
+
+    try {
+        let uniqueName = nameInput;
+
+        // Step A: Check if this EMAIL is already in our system
+        const qEmail = query(collection(db, "leaderboard"), where("email", "==", emailInput), limit(1));
+        const emailSnap = await getDocs(qEmail);
+
+        if (!emailSnap.empty) {
+            // User exists! Retrieve their assigned name
+            uniqueName = emailSnap.docs[0].data().name;
+        } else {
+            // Step B: NEW USER - Check if the NAME is taken
+            const qName = query(collection(db, "leaderboard"), where("name", "==", nameInput));
+            const nameSnap = await getDocs(qName);
+            
+            if (!nameSnap.empty) {
+                // Name taken, append a random single digit (0-9)
+                const randomDigit = Math.floor(Math.random() * 10);
+                uniqueName = `${nameInput}${randomDigit}`;
+            }
+        }
+
+        localStorage.setItem('pharm_doctordle_user', uniqueName);
+        localStorage.setItem('pharm_doctordle_email', emailInput);
         
-        // Find position (1-based index)
-        const rank = scores.indexOf(userScore) + 1;
-        return rank > 0 ? `#${rank}` : "N/A";
+        playerName = uniqueName;
+        playerEmail = emailInput;
+        
+        document.getElementById('name-modal').classList.add('hidden');
+        updateGreeting();
+        await checkPreviousPlay();
+
     } catch (e) {
-        console.error("Rank Error:", e);
-        return "--";
+        console.error("Auth Error:", e);
+        startBtn.disabled = false;
+        startBtn.textContent = "Begin Case";
     }
 }
 
@@ -62,64 +96,34 @@ function updateGreeting() {
     }
 }
 
-async function checkAccess() {
-    const nameModal = document.getElementById('name-modal');
-    if (!playerName) {
-        nameModal.classList.remove('hidden');
-        nameModal.classList.add('flex');
-    } else {
-        nameModal.classList.add('hidden');
-        updateGreeting();
-        await checkPreviousPlay();
-    }
+// --- 2. GAME ENGINE ---
+
+async function calculateRank(userScore) {
+    try {
+        const q = query(collection(db, "leaderboard"), where("date", "==", todayStr));
+        const querySnapshot = await getDocs(q);
+        const scores = [];
+        querySnapshot.forEach((doc) => scores.push(doc.data().score));
+        scores.sort((a, b) => b - a);
+        const rank = scores.indexOf(userScore) + 1;
+        return rank > 0 ? `#${rank}` : "N/A";
+    } catch (e) { return "--"; }
 }
 
 async function checkPreviousPlay() {
-    const scoreId = `${todayStr}_${playerName}`;
+    const scoreId = `${todayStr}_${playerEmail}`;
     const docRef = doc(db, "leaderboard", scoreId);
     
     try {
         const docSnap = await getDoc(docRef);
-
         if (docSnap.exists()) {
             const data = docSnap.data();
-            const userRank = await calculateRank(data.score);
-            
-            // UI updates for returning user
-            document.getElementById('guess-container').classList.add('hidden');
-            document.getElementById('final-score-display').textContent = data.score;
-            document.getElementById('rank-display').textContent = userRank;
-            document.getElementById('patient-profile').textContent = `Rotation Complete, Dr. ${playerName}.`;
-            
-            revealAll();
-            
-            // Show result section and fetch explanation
-            const resultsSection = document.getElementById('results-section');
-            const gameOverSection = document.getElementById('game-over-section');
-            
-            if (data.score > 0) {
-                resultsSection.classList.remove('hidden');
-            } else {
-                gameOverSection.classList.remove('hidden');
-            }
-
-            // Get case details to show explanation
-            const caseSnap = await getDoc(doc(db, "cases", todayStr));
-            if (caseSnap.exists()) {
-                const explanation = caseSnap.data().explanation;
-                const expField = data.score > 0 ? 'final-explanation' : 'game-over-explanation';
-                document.getElementById(expField).textContent = explanation;
-                if (data.score === 0) {
-                    document.getElementById('correct-answer-reveal').textContent = caseSnap.data().correct_drug;
-                }
-            }
+            showEndState(data.score);
         } else {
-            initGame();
+            await initGame();
         }
-    } catch (e) { console.error("Access Check Error:", e); }
+    } catch (e) { console.error("Database Check Error:", e); }
 }
-
-// --- 2. GAME ENGINE ---
 
 async function initGame() {
     const docRef = doc(db, "cases", todayStr);
@@ -133,28 +137,24 @@ async function initGame() {
             document.getElementById('mechanism-hint').textContent = data.hint_mechanism;
             document.getElementById('pearl-hint').textContent = data.hint_clinical_pearl;
             document.getElementById('correct-answer-reveal').textContent = data.correct_drug;
-            
-            // Set dynamic explanations for end-game
             document.getElementById('final-explanation').textContent = data.explanation;
             document.getElementById('game-over-explanation').textContent = data.explanation;
-            
             answerKey = data.clean_drug.toLowerCase();
         } else {
-            document.getElementById('patient-profile').textContent = "No clinical case for today.";
+            document.getElementById('patient-profile').textContent = "No rotations assigned for today.";
         }
-    } catch (error) { console.error("Firebase Error:", error); }
+    } catch (error) { console.error("Case Loading Error:", error); }
 }
 
 async function handleGuess() {
     const inputField = document.getElementById('user-guess');
     const userGuess = inputField.value.toLowerCase().trim();
-
-    if (userGuess === "") return;
+    if (!userGuess || !answerKey) return;
 
     if (userGuess === answerKey) {
         const finalScore = (MAX_TRIES - currentTry); 
         await saveScore(finalScore);
-        showWinState(finalScore);
+        showEndState(finalScore);
     } else {
         currentTry++;
         triggerWrongEffect();
@@ -163,13 +163,13 @@ async function handleGuess() {
 }
 
 async function saveScore(score) {
-    const scoreId = `${todayStr}_${playerName}`;
+    const scoreId = `${todayStr}_${playerEmail}`;
     try {
         await setDoc(doc(db, "leaderboard", scoreId), {
             name: playerName,
+            email: playerEmail,
             score: score,
             date: todayStr,
-            ip: userIP,
             timestamp: new Date()
         });
     } catch (e) { console.error("Score Save Error:", e); }
@@ -185,11 +185,23 @@ async function updateGameProgress() {
 
     if (currentTry >= MAX_TRIES) {
         await saveScore(0);
-        document.getElementById('guess-container').classList.add('hidden');
-        document.getElementById('game-over-section').classList.remove('hidden');
-        revealAll();
+        showEndState(0);
     }
     document.getElementById('user-guess').value = "";
+}
+
+async function showEndState(score) {
+    revealAll();
+    const userRank = await calculateRank(score);
+    document.getElementById('guess-container').classList.add('hidden');
+    
+    if (score > 0) {
+        document.getElementById('results-section').classList.remove('hidden');
+        document.getElementById('final-score-display').textContent = score;
+        document.getElementById('rank-display').textContent = userRank;
+    } else {
+        document.getElementById('game-over-section').classList.remove('hidden');
+    }
 }
 
 function revealSection(id) {
@@ -201,50 +213,31 @@ function revealSection(id) {
 }
 
 function revealAll() {
-    revealSection('labs-section');
-    revealSection('mechanism-section');
-    revealSection('pearl-section');
-}
-
-async function showWinState(score) {
-    revealAll();
-    document.getElementById('final-score-display').textContent = score;
-    const userRank = await calculateRank(score);
-    document.getElementById('rank-display').textContent = userRank;
-    
-    document.getElementById('results-section').classList.remove('hidden');
-    document.getElementById('guess-container').classList.add('hidden');
+    ['labs-section', 'mechanism-section', 'pearl-section'].forEach(id => revealSection(id));
 }
 
 function triggerWrongEffect() {
     const input = document.getElementById('user-guess');
-    input.classList.add('animate-shake');
-    setTimeout(() => input.classList.remove('animate-shake'), 400);
+    if(input) {
+        input.classList.add('animate-shake');
+        setTimeout(() => input.classList.remove('animate-shake'), 400);
+    }
 }
 
 // --- EVENT LISTENERS ---
+document.addEventListener('DOMContentLoaded', () => {
+    const startBtn = document.getElementById('start-game-btn');
+    const submitBtn = document.getElementById('submit-btn');
+    const guessInput = document.getElementById('user-guess');
 
-document.getElementById('start-game-btn').addEventListener('click', () => {
-    const input = document.getElementById('player-name-input');
-    if (input.value.trim().length > 1) {
-        playerName = input.value.trim().toUpperCase();
-        localStorage.setItem('pharm_doctordle_user', playerName);
-        document.getElementById('name-modal').classList.add('hidden');
-        updateGreeting();
-        checkPreviousPlay();
-    } else {
-        alert("Enter your name to begin rotation.");
+    if(startBtn) startBtn.addEventListener('click', handleAuthentication);
+    if(submitBtn) submitBtn.addEventListener('click', handleGuess);
+    if(guessInput) {
+        guessInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleGuess();
+        });
     }
+    
+    // Kick off the initial check
+    checkAccess();
 });
-
-document.getElementById('submit-btn').addEventListener('click', handleGuess);
-
-// Allow "Enter" key to submit
-document.getElementById('user-guess').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') handleGuess();
-});
-
-// --- INITIALIZE ---
-getIP();
-checkAccess();
-document.getElementById('submit-btn').addEventListener('click', handleGuess);

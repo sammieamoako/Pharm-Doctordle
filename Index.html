@@ -2,143 +2,208 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pharm-Doctordle 💊</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PHARM-OS | Neural Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=JetBrains+Mono&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
-        .mono { font-family: 'JetBrains Mono', monospace; }
+        :root { --glass: rgba(255, 255, 255, 0.25); }
+        
+        body { 
+            background: linear-gradient(165deg, #f1f5f9 0%, #cbd5e1 100%);
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            color: #1e293b;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .glass-shell {
+            background: var(--glass);
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.05);
+        }
+
+        .blob {
+            position: fixed; width: 400px; height: 400px; border-radius: 50%;
+            filter: blur(90px); z-index: -1; opacity: 0.35;
+        }
+        .blob-1 { background: #3b82f6; top: -100px; right: -100px; }
+        .blob-2 { background: #6366f1; bottom: 5%; left: -150px; }
+
+        @keyframes ecg-line { 0% { stroke-dashoffset: 200; } 100% { stroke-dashoffset: 0; } }
+        .ecg-animate { stroke-dasharray: 100; animation: ecg-line 2s linear infinite; }
+
+        @keyframes grid-pop {
+            0%, 100% { transform: scale(1); opacity: 0.4; }
+            50% { transform: scale(1.2); opacity: 1; background: #10b981; }
+        }
+        .grid-dot { animation: grid-pop 1.8s infinite ease-in-out; }
+        .dot-delay-1 { animation-delay: 0.4s; }
+
+        .view-section { transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        .hidden { display: none; opacity: 0; transform: translateY(10px); }
+
+        /* New Top Nav Styling */
+        .nav-link {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .nav-link.active { color: #2563eb; }
+        .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -4px; left: 50%; transform: translateX(-50%);
+            width: 4px; height: 4px; background: #2563eb; border-radius: 50%;
+        }
     </style>
 </head>
-<body class="bg-slate-100 min-h-screen flex flex-col items-center p-4">
+<body class="px-6 pt-8 pb-12">
 
-    <div id="name-modal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-md transition-opacity duration-500 hidden">
-        <div class="bg-white p-10 rounded-[2.5rem] shadow-2xl max-w-sm w-full text-center border border-white/20">
-            <div class="text-4xl mb-4">🩺</div>
-            <h2 class="text-2xl font-black text-slate-900 tracking-tighter uppercase">Clinical Check-in</h2>
-            <p class="text-slate-500 text-sm mt-2 mb-8 font-medium">Please enter your name or initials to begin today's rotation.</p>
-            
-            <input type="text" id="player-name-input" placeholder="e.g. SAMUEL" 
-                   class="w-full p-4 bg-slate-100 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-500 outline-none text-center font-bold uppercase tracking-widest transition-all mb-4">
-            
-            <button id="start-game-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl shadow-lg shadow-blue-200 transition-all active:scale-95 uppercase tracking-widest text-sm">
-                Begin Case
+    <div class="blob blob-1"></div>
+    <div class="blob blob-2"></div>
+
+    <nav class="glass-shell rounded-3xl p-4 mb-8 flex justify-between items-center sticky top-4 z-50">
+        <h1 class="text-xl font-black italic tracking-tighter text-slate-900">PHARM<span class="text-blue-600">OS</span></h1>
+        
+        <div class="flex items-center gap-6">
+            <button onclick="changeTab('home', this)" class="nav-link active p-1">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path></svg>
+            </button>
+            <button onclick="changeTab('stats', this)" class="nav-link p-1 text-slate-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
+            </button>
+            <button onclick="changeTab('profile', this)" class="nav-link p-1 text-slate-400">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
             </button>
         </div>
-    </div>
+    </nav>
 
-    <header class="text-center my-10">
-        <div class="inline-block bg-blue-600 text-white text-[10px] font-black px-2 py-1 rounded-md mb-3 tracking-tighter uppercase">Clinical Simulator v1.0</div>
-        <h1 class="text-5xl font-black text-slate-900 tracking-tighter italic">
-            PHARM<span class="text-blue-600">DOCTORDLE</span>
-        </h1>
-        
-        <p id="user-greeting" class="text-blue-600 font-bold mt-2 hidden animate-pulse">
-            Hello, Dr.(Pharm) <span id="display-name" class="underline decoration-2 underline-offset-4"></span>
-        </p>
-
-        <div class="flex justify-center items-center gap-2 mt-4">
-            <span id="attempts-left" class="text-[10px] font-black px-3 py-1 bg-white border border-slate-200 text-slate-500 rounded-full shadow-sm uppercase tracking-widest">
-                5 Tries Remaining
-            </span>
+    <header class="mb-8 px-2">
+        <div class="flex items-center gap-2">
+            <div class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
+            <span class="text-[9px] font-black uppercase tracking-[0.3em] text-slate-500">Neural Link Active • V4.0</span>
         </div>
     </header>
 
-    <main class="max-w-md w-full bg-white rounded-[2rem] shadow-2xl p-8 border border-white/20 overflow-hidden relative">
+    <main id="main-view">
         
-        <div id="case-display" class="space-y-6">
-            <div class="relative">
-                <span class="text-blue-600 text-[10px] font-black uppercase tracking-widest mb-1 block">Patient Profile</span>
-                <p id="patient-profile" class="text-2xl font-bold text-slate-800 leading-tight">
-                    Synchronizing database...
-                </p>
-            </div>
-            
-            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                <span class="text-rose-500 text-[10px] font-black uppercase tracking-widest mb-1 block">Clinical Presentation</span>
-                <p id="presentation" class="text-slate-600 italic leading-relaxed text-sm"></p>
-            </div>
+        <div id="view-home" class="view-section space-y-6">
+            <h2 class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-4 ml-1">Clinical Rotations</h2>
 
-            <div id="labs-section" class="hidden p-5 bg-slate-900 rounded-2xl shadow-2xl reveal-hint">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="flex items-center gap-2 text-cyan-400 text-[10px] font-black uppercase tracking-widest">
-                        <span class="relative flex h-2 w-2">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-cyan-400 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-cyan-500"></span>
-                        </span>
-                        Telemetry / Lab Results
-                    </span>
-                    <span class="text-slate-500 text-[8px] font-mono tracking-tighter">STAT REQUEST</span>
+            <a href="erx.html" class="glass-shell rounded-[2.5rem] p-6 block active:scale-95 transition-transform overflow-hidden">
+                <div class="flex items-center gap-6">
+                    <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center relative shadow-xl shadow-blue-500/20 shrink-0">
+                        <svg viewBox="0 0 100 40" class="w-10 h-10"><path d="M0,20 L30,20 L35,10 L40,30 L45,5 L50,35 L55,20 L100,20" fill="none" stroke="white" stroke-width="4" class="ecg-animate" /></svg>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between">
+                            <h3 class="text-xl font-black text-slate-800">ERx Triage</h3>
+                            <span class="text-[8px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded font-black tracking-widest uppercase">Emergency</span>
+                        </div>
+                        <p class="text-xs font-bold text-slate-500 mt-1 uppercase tracking-tight">Vitals Response Drill</p>
+                    </div>
                 </div>
-                <p id="labs" class="mono text-cyan-50 text-lg tracking-tighter leading-snug"></p>
-            </div>
-
-            <div id="mechanism-section" class="hidden p-5 bg-amber-50 border border-amber-100 rounded-2xl reveal-hint">
-                <span class="text-amber-600 text-[10px] font-black uppercase tracking-widest mb-1 block underline decoration-2 underline-offset-4">Pharmacology Hint (MOA)</span>
-                <p id="mechanism-hint" class="text-amber-900 font-medium text-sm leading-relaxed"></p>
-            </div>
-
-            <div id="pearl-section" class="hidden p-5 bg-indigo-50 border border-indigo-100 rounded-2xl reveal-hint">
-                <span class="text-indigo-600 text-[10px] font-black uppercase tracking-widest mb-1 block underline decoration-2 underline-offset-4">Expert Clinical Pearl</span>
-                <p id="pearl-hint" class="text-indigo-900 font-medium text-sm leading-relaxed"></p>
-            </div>
-        </div>
-
-        <div id="guess-container" class="mt-8 space-y-4">
-            <div class="relative">
-                <input type="text" id="user-guess" placeholder="ENTER DRUG NAME" 
-                       class="w-full p-5 bg-slate-100 border-2 border-transparent rounded-2xl focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none uppercase font-black text-center text-xl tracking-tighter transition-all placeholder:text-slate-400">
-            </div>
-            
-            <button id="submit-btn" class="w-full bg-slate-900 hover:bg-blue-600 text-white font-black py-5 rounded-2xl transition-all shadow-lg active:scale-[0.98] uppercase tracking-widest text-sm">
-                Confirm Diagnosis
-            </button>
-        </div>
-
-        <div id="results-section" class="hidden mt-8 p-6 bg-emerald-50 border-2 border-emerald-200 rounded-[2rem] text-center">
-            <div class="text-emerald-600 text-3xl mb-2">🎯</div>
-            <h2 class="text-emerald-900 font-black text-xl uppercase tracking-tighter mb-2">Diagnosis Confirmed</h2>
-            
-            <div class="flex justify-around my-4 bg-white/50 py-3 rounded-2xl border border-emerald-100">
-                <div>
-                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Your Score</p>
-                    <p id="final-score-display" class="text-2xl font-black text-emerald-600">--</p>
-                </div>
-                <div>
-                    <p class="text-[8px] font-black text-slate-400 uppercase tracking-widest">Today's Rank</p>
-                    <p id="rank-display" class="text-2xl font-black text-blue-600">--</p>
-                </div>
-            </div>
-
-            <p id="final-explanation" class="text-xs text-emerald-800 leading-relaxed font-medium mb-6"></p>
-            
-            <a href="leaderboard.html" class="inline-block w-full bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-black py-3 rounded-xl uppercase tracking-widest transition-all shadow-md shadow-emerald-200">
-                View Global Rankings 🏆
             </a>
-        </div>
 
-        <div id="game-over-section" class="hidden mt-8 p-6 bg-rose-50 border-2 border-rose-200 rounded-[2rem] text-center">
-            <div class="text-rose-600 text-3xl mb-2">⚠️</div>
-            <h2 class="text-rose-900 font-black text-xl uppercase tracking-tighter mb-1">Clinical Failure</h2>
-            <p class="text-[10px] text-rose-700 uppercase font-bold tracking-widest mb-4">Correct Prescription Required:</p>
-            <span id="correct-answer-reveal" class="inline-block px-6 py-2 bg-rose-600 text-white font-black rounded-full text-xl tracking-tighter uppercase shadow-lg shadow-rose-200 mb-4"></span>
-            
-            <p id="game-over-explanation" class="text-[11px] text-rose-800 italic leading-relaxed mb-6 opacity-80"></p>
 
-            <a href="leaderboard.html" class="inline-block w-full bg-rose-600 hover:bg-rose-700 text-white text-[10px] font-black py-3 rounded-xl uppercase tracking-widest transition-all">
-                Check Leaderboard
+            <a href="doctordle.html" class="glass-shell rounded-[2.5rem] p-6 block active:scale-95 transition-transform">
+                <div class="flex items-center gap-6">
+                    <div class="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center shadow-xl shadow-slate-900/20 shrink-0">
+                        <div class="grid grid-cols-2 gap-1.5">
+                            <div class="w-3.5 h-3.5 rounded-sm border border-white/20 grid-dot"></div>
+                            <div class="w-3.5 h-3.5 rounded-sm border border-white/20 grid-dot dot-delay-1"></div>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between">
+                            <h3 class="text-xl font-black text-slate-800">Doctordle</h3>
+                            <span class="text-[8px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-black tracking-widest uppercase">Daily</span>
+                        </div>
+                        <p class="text-xs font-bold text-slate-500 mt-1 uppercase tracking-tight">Diagnostic Deduction</p>
+                    </div>
+                </div>
             </a>
+
+            <a href="penguin.html" class="glass-shell rounded-[2.5rem] p-6 block active:scale-95 transition-transform overflow-hidden relative group">
+                <div class="absolute -right-4 -top-4 w-24 h-24 bg-sky-500/10 rounded-full blur-2xl group-hover:bg-sky-500/20 transition-colors"></div>
+                <div class="flex items-center gap-6 relative z-10">
+                    <div class="w-16 h-16 bg-gradient-to-br from-sky-500 to-blue-700 rounded-2xl flex items-center justify-center shadow-xl shadow-sky-500/20 shrink-0">
+                        <svg viewBox="0 0 24 24" class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex justify-between">
+                            <h3 class="text-xl font-black text-slate-800">Hospital Sprint</h3>
+                            <span class="text-[8px] bg-sky-100 text-sky-600 px-2 py-0.5 rounded font-black tracking-widest uppercase">Rapid</span>
+                        </div>
+                        <p class="text-xs font-bold text-slate-500 mt-1 uppercase tracking-tight">Shoreline Triage Logic</p>
+                    </div>
         </div>
 
+        <div id="view-stats" class="view-section hidden space-y-6">
+            <h2 class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-4 ml-1">Global Biometrics</h2>
+            <div class="glass-shell rounded-[2.5rem] p-6">
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center p-4 bg-white/30 rounded-2xl border border-white/50">
+                        <div class="flex items-center gap-4">
+                            <span class="text-blue-600 font-black text-lg italic">01</span>
+                            <span class="font-bold text-slate-700 uppercase text-sm">Dr. Amoako</span>
+                        </div>
+                        <span class="font-black text-slate-900">4,820 <small class="text-[8px] opacity-50 uppercase">pts</small></span>
+                    </div>
+                    <p class="text-center text-[9px] font-black uppercase tracking-widest text-slate-400 py-4">Scanning active practitioners...</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-profile" class="view-section hidden space-y-6">
+            <h2 class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-400 mb-4 ml-1">Practitioner ID</h2>
+            <div class="glass-shell rounded-[2.5rem] p-8 border-t-4 border-blue-500 overflow-hidden relative">
+                <div class="absolute -right-6 -bottom-6 w-32 h-32 bg-blue-500/5 rounded-full blur-3xl"></div>
+                
+                <div class="flex flex-col items-center mb-8">
+                    <div class="w-20 h-20 bg-slate-100 rounded-3xl border-2 border-white shadow-xl flex items-center justify-center text-slate-300 mb-4">
+                        <svg class="w-10 h-10" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-900 tracking-tighter uppercase">Guest Clinician</h3>
+                    <p class="text-[10px] font-black text-blue-600 tracking-[0.2em] uppercase">Auth: PX-2026-GH</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white/40 p-4 rounded-2xl text-center">
+                        <span class="text-[8px] font-black text-slate-400 uppercase block mb-1">Lives Saved</span>
+                        <span class="text-xl font-black text-slate-800">0</span>
+                    </div>
+                    <div class="bg-white/40 p-4 rounded-2xl text-center">
+                        <span class="text-[8px] font-black text-slate-400 uppercase block mb-1">Avg Triage</span>
+                        <span class="text-xl font-black text-slate-800">0.0s</span>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
 
-    <footer class="mt-12 text-slate-400 text-[10px] font-bold uppercase tracking-[0.2em] flex flex-col items-center gap-4">
-        <a href="archives.html" class="text-blue-500 hover:underline">📚 View Clinical Archives</a>
-        <span>&copy; 2026 Dr. Samuel Amoako • PhD Research Project</span>
-    </footer>
+    <div class="mt-12 py-10 border-t border-slate-200">
+        <div class="glass-shell rounded-3xl h-32 border-dashed border-slate-300 border-2 flex flex-col items-center justify-center">
+             <span class="text-[8px] font-black uppercase tracking-[0.4em] text-slate-400">Marketing Uplink Zone</span>
+        </div>
+    </div>
 
-    <script type="module" src="app.js"></script>
+    <script>
+        function changeTab(viewId, el) {
+            document.querySelectorAll('.view-section').forEach(v => v.classList.add('hidden'));
+            document.getElementById('view-' + viewId).classList.remove('hidden');
+            
+            document.querySelectorAll('.nav-link').forEach(btn => {
+                btn.classList.remove('active', 'text-blue-600');
+                btn.classList.add('text-slate-400');
+            });
+            el.classList.add('active', 'text-blue-600');
+            el.classList.remove('text-slate-400');
+        }
+    </script>
+
 </body>
 </html>
