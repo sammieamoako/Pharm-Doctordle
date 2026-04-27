@@ -2,57 +2,100 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>PHARM-OS | Hospital Sprint</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
         
-        body { background: #020617; font-family: 'JetBrains Mono', monospace; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; overflow: hidden; }
+        /* Prevent scroll bounce on mobile */
+        html, body { 
+            background: #020617; 
+            font-family: 'JetBrains Mono', monospace; 
+            height: 100%; 
+            margin: 0; 
+            overflow: hidden; 
+            position: fixed; 
+            width: 100%;
+        }
+
+        body { display: flex; justify-content: center; align-items: center; }
         
         /* Scanline CRT Effect Overlay */
         .crt-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03)); background-size: 100% 3px, 3px 100%; pointer-events: none; z-index: 1000; }
 
-        .tablet-frame { width: 950px; height: 650px; background: #0f172a; border: 12px solid #334155; border-radius: 40px; position: relative; overflow: hidden; display: flex; flex-direction: column; padding: 20px; box-shadow: 0 0 50px rgba(14, 165, 233, 0.2); }
+        /* Responsive Frame */
+        .tablet-frame { 
+            width: 95vw; 
+            height: 90vh; 
+            max-width: 450px; /* Mobile-first vertical profile */
+            background: #0f172a; 
+            border: 6px solid #334155; 
+            border-radius: 30px; 
+            position: relative; 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            padding: 15px; 
+            box-shadow: 0 0 50px rgba(14, 165, 233, 0.2); 
+        }
 
         /* Environmental Ocean System */
-        .stage-bg { flex-grow: 1; background: #0ea5e9; border-radius: 25px; position: relative; overflow: hidden; transition: background 2s ease; }
+        .stage-bg { flex-grow: 1; background: #0ea5e9; border-radius: 20px; position: relative; overflow: hidden; transition: background 2s ease; }
         .storm-active { background: #1e1b4b !important; }
 
-        .ocean { position: absolute; bottom: 0; left: 0; width: 100%; height: 120px; z-index: 5; }
+        .ocean { position: absolute; bottom: 0; left: 0; width: 100%; height: 80px; z-index: 5; }
         .wave { position: absolute; bottom: 0; width: 200%; height: 100%; background-repeat: repeat-x; animation: wave-move 8s linear infinite; filter: drop-shadow(0 -2px 10px rgba(255,255,255,0.2)); }
         .wave1 { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100"><path d="M0,50 C150,100 350,0 500,50 C650,100 850,0 1000,50 L1000,100 L0,100 Z" fill="%237dd3fc" opacity="0.3"/></svg>'); animation-duration: 5s; }
         .wave2 { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100"><path d="M0,50 C150,0 350,100 500,50 C650,0 850,100 1000,50 L1000,100 L0,100 Z" fill="%230ea5e9" opacity="0.5"/></svg>'); animation-duration: 7s; }
         
         @keyframes wave-move { from { transform: translateX(0); } to { transform: translateX(-50%); } }
 
-        /* Iceberg Physics */
-        .iceberg { position: absolute; bottom: 60px; width: 180px; height: 50px; background: #f8fafc; border-radius: 60% 60% 20% 20%; box-shadow: 0 10px 0 #cbd5e1; transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); z-index: 30; }
-        .cracked-1 { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="M10 10 L40 50 L10 90" stroke="%2394a3b8" stroke-width="2" fill="none"/></svg>'); filter: contrast(1.2); }
-        .cracked-2 { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><path d="M10 10 L40 50 L10 90 M90 10 L60 50 L90 90" stroke="%23475569" stroke-width="3" fill="none"/></svg>'); filter: brightness(0.7) sepia(0.3); transform: rotate(-5deg); }
+        /* Iceberg Physics - Scaled for smaller width */
+        .iceberg { 
+            position: absolute; 
+            bottom: 40px; 
+            width: 120px; 
+            height: 35px; 
+            background: #f8fafc; 
+            border-radius: 30px 30px 10px 10px; 
+            box-shadow: 0 6px 0 #cbd5e1; 
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1); 
+            z-index: 30; 
+        }
         
-        .shatter { animation: shatter-ice 0.6s ease-out forwards; }
-        @keyframes shatter-ice { to { transform: scale(0) translateY(100px) rotate(45deg); opacity: 0; } }
-
         /* Character Animations */
-        #penguin { position: absolute; bottom: 100px; left: 110px; font-size: 80px; z-index: 50; transition: transform 0.6s, bottom 0.6s; transform-origin: center bottom; }
+        #penguin { 
+            position: absolute; 
+            bottom: 70px; 
+            left: 15%; 
+            font-size: 60px; 
+            z-index: 50; 
+            transition: transform 0.6s, bottom 0.6s; 
+            transform-origin: center bottom; 
+        }
+        
         .jumping { animation: jump-arc 0.7s ease-in-out; }
-        @keyframes jump-arc { 0%, 100% { bottom: 100px; transform: rotate(0deg); } 50% { bottom: 250px; transform: rotate(10deg); } }
+        @keyframes jump-arc { 0%, 100% { bottom: 70px; transform: rotate(0deg); } 50% { bottom: 180px; transform: rotate(10deg); } }
+        
         .falling { animation: deep-sink 1.2s ease-in forwards; }
         @keyframes deep-sink { 20% { transform: translateY(-30px) rotate(-20deg); } 100% { transform: translateY(400px) rotate(180deg); opacity: 0; } }
 
         /* Clinical UI */
         .glass { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(10px); border: 2px solid rgba(14, 165, 233, 0.3); border-radius: 15px; box-shadow: inset 0 0 20px rgba(14, 165, 233, 0.1); }
-        .timer-bar { position: absolute; top: 15px; left: 10%; width: 80%; height: 10px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        .timer-bar { position: absolute; top: 10px; left: 10%; width: 80%; height: 8px; background: rgba(0,0,0,0.5); border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
         #timer-fill { height: 100%; width: 100%; background: #22d3ee; box-shadow: 0 0 15px #22d3ee; transition: width 0.1s linear; }
         
-        .try-dot { width: 15px; height: 15px; border-radius: 3px; background: #1e293b; border: 1px solid #334155; }
+        .try-dot { width: 12px; height: 12px; border-radius: 3px; background: #1e293b; border: 1px solid #334155; }
         .try-on { background: #10b981; box-shadow: 0 0 10px #10b981; border-color: #34d399; }
         
-        .progress-block { width: 50px; height: 10px; background: #1e293b; border: 1px solid #334155; transform: skewX(-15deg); }
+        .progress-block { width: 18%; height: 8px; background: #1e293b; border: 1px solid #334155; transform: skewX(-15deg); }
         .progress-done { background: #0ea5e9; box-shadow: 0 0 15px #0ea5e9; border-color: #38bdf8; }
 
-        #clue-text { color: #f1f5f9; text-shadow: 0 0 8px rgba(255,255,255,0.3); }
+        #clue-text { color: #f1f5f9; text-shadow: 0 0 8px rgba(255,255,255,0.3); font-size: 0.85rem; line-height: 1.2; }
+
+        /* Fix for mobile keyboard zoom */
+        #antidote-input { font-size: 1.2rem !important; }
 
         @keyframes shake { 0%, 100% { transform: translate(0,0); } 20% { transform: translate(-10px, 5px); } 40% { transform: translate(10px, -5px); } 60% { transform: translate(-5px, 2px); } }
         .error-shake { animation: shake 0.15s ease-in-out infinite; }
@@ -61,33 +104,33 @@
 <body>
     <div class="crt-overlay"></div>
     <div class="tablet-frame" id="game-frame">
-        <div class="flex justify-between px-4 mb-4">
-            <div class="flex gap-2" id="tries-container">
+        <div class="flex justify-between px-2 mb-3">
+            <div class="flex gap-1.5" id="tries-container">
                 <div class="try-dot try-on"></div><div class="try-dot try-on"></div><div class="try-dot try-on"></div>
             </div>
-            <div class="flex gap-3" id="progress-container">
+            <div class="flex gap-1.5 justify-end flex-1 ml-4" id="progress-container">
                 <div class="progress-block"></div><div class="progress-block"></div><div class="progress-block"></div><div class="progress-block"></div><div class="progress-block"></div>
             </div>
         </div>
 
-        <div class="glass p-6 mx-2 mb-4 h-36 flex flex-col items-center justify-center relative">
-            <div class="absolute top-2 left-3 text-[10px] text-blue-400 font-bold uppercase tracking-tighter opacity-50">Neural Link Active</div>
-            <p id="clue-text" class="text-lg font-bold text-center leading-relaxed italic"></p>
+        <div class="glass p-4 mx-1 mb-3 h-28 flex flex-col items-center justify-center relative">
+            <div class="absolute top-1.5 left-2 text-[8px] text-blue-400 font-bold uppercase tracking-tighter opacity-50">Neural Link Active</div>
+            <p id="clue-text" class="font-bold text-center italic"></p>
         </div>
 
-        <div class="stage-bg mx-2" id="stage">
+        <div class="stage-bg mx-1" id="stage">
             <div class="timer-bar"><div id="timer-fill"></div></div>
             <div class="ocean" id="ocean-bg">
                 <div class="wave wave1"></div><div class="wave wave2"></div>
             </div>
             <div id="penguin">🐧</div>
-            <div id="ice-current" class="iceberg" style="left: 70px;"></div>
-            <div id="ice-next" class="iceberg" style="left: 450px;"></div>
+            <div id="ice-current" class="iceberg" style="left: 10%;"></div>
+            <div id="ice-next" class="iceberg" style="left: 55%;"></div>
         </div>
 
-        <div class="p-8 flex flex-col items-center">
-            <input type="text" id="antidote-input" placeholder="ANALYZING ANTIDOTE..." autocomplete="off" 
-                   class="w-full max-w-lg bg-slate-900 border-2 border-blue-500/30 rounded-xl py-5 px-8 text-center font-black text-3xl text-blue-400 uppercase tracking-widest shadow-2xl focus:border-blue-400 outline-none transition-all placeholder:text-blue-900">
+        <div class="py-4 px-1 flex flex-col items-center">
+            <input type="text" id="antidote-input" placeholder="DECODE..." autocomplete="off" 
+                   class="w-full bg-slate-900 border-2 border-blue-500/30 rounded-xl py-4 px-4 text-center font-black text-blue-400 uppercase tracking-widest shadow-2xl focus:border-blue-400 outline-none transition-all placeholder:text-blue-900">
         </div>
     </div>
     <script type="module" src="penguin.js"></script>
